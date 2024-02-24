@@ -1,19 +1,19 @@
-
-  
-
 # XMLTV DOCKER
 
 A docker implementation of [xmltv](https://github.com/XMLTV/xmltv) I created to run on my Synology DS918+ (but it will probably run on any docker host). I use it to update the tv guide on my Plex server.
 
 Follow this guide to create a xmltv docker image on your docker host. The image is used to create and RUN a temporary docker container. When the container run's it will update the xmltv output file and the container will then be trashed. Schedule the docker RUN command on your host daily to update your xmltv.xml file.
 
-## Updates 
+## Updates
 
-10/2-2024
+2024-02-23:
+Forked from kibuan/xmltv_docker. Updated grab.sh script. Added ability to create configuration file. updated readme.
+
+
+2024-02-10:
 Updated tv_grab_dk_meetv. Fixes problem where the EPG guide in Plex showed the wrong arrings some channels.
 
-3/8-2021
-
+2021-08-03:
 Added support for meetv.dk grabber (tv_grab_dk_meetv) created by Klaus Madsen: https://sourceforge.net/p/xmltvdk/mailman/message/37168487/
 
 ## Getting Started
@@ -23,21 +23,76 @@ These instructions will guide you to build the xmltv docker image and get the xm
 ### Prerequisites
 
 ```
-Clone the files in this Github repository to a local folder on your docker host 
+Clone the files in this Github repository to a local folder on your docker host
 (in this guide we use: /volume1/docker/xmltv/ on the host)
 ```
 
-### Build a docker image file using the Dockerfile in this repository
+### Manually build a docker image file using the Dockerfile in this repository
 
-**Open a SSH connection to your docker host**
+Note: there is prebuild image available on Docker Hub (racle90/xmltv) if you don't want to build the image yourself.
+
+# Clone repo
+
 ```
-sudo docker image build -t kibuan/xmltv /volume1/docker/xmltv/build
+git clone https://github.com/racle90/xmltv_docker.git
+cd xmltv_docker
+``
+
+
 ```
+# Build image
+```
+docker image build -t racle90/xmltv build/
+```
+
+
+# Usage
+
+## create data folder
+```
+mkdir -p data/{output,config}
+```
+
+## configure the xmltv grabber for first time if you don't have a config file
+```
+docker container run --rm -ti \
+--user $UID:$GID \
+-v "./data/config/:/config" \
+-v "./data/output/:/output" \
+-e 'XMLTV_GRABBER=tv_grab_fi' \
+racle90/xmltv configure
+```
+
+
+## optional: keep only wanted sources
+```
+docker container run --rm -ti \
+--user $UID:$GID \
+-v "./data/config/:/config" \
+-v "./data/output/:/output" \
+-e 'XMLTV_GRABBER=tv_grab_fi' \
+-e 'XMLTV_DAYS=14' \
+racle90/xmltv keep "peruskanavat.telkku.com"
+```
+
+## run the xmltv grabber
+```
+docker container run --rm -ti \
+--user $UID:$GID \
+-v "./data/config/:/config" \
+-v "./data/output/:/output" \
+-e 'XMLTV_GRABBER=tv_grab_fi' \
+-e 'XMLTV_DAYS=14' \
+racle90/xmltv
+```
+
+
+
 
 ### Docker container Mounts and Environment variables
 
 **Mounts (MANDATORY)**
-  
+
 | Mount | Host folder  | Example
 |--|--|--|
 |/root/.xmltv | 'Container work-dir' - folder to save your xmltv configuration and cache files on your docker-host | ```-v '/volume1/docker/xmltv/container:/root/.xmltv'```
@@ -61,7 +116,7 @@ If you already have a xmltv grabber configuration file in the container 'work-di
 ```
 sudo docker container run --rm -i \
 -v '/volume1/docker/xmltv/container:/root/.xmltv' \
-kibuan/xmltv 
+kibuan/xmltv
 ```
 
 Follow the instructions in the xmltv setup guide. When the container exits you should see the .conf file in your mounted folder on the host.
@@ -74,7 +129,7 @@ Follow the instructions in the xmltv setup guide. When the container exits you s
 sudo docker container run --rm -i \
 -v '/volume1/docker/xmltv/container:/root/.xmltv' \
 -v '/volume1/docker/xmltv/container:/opt/xml' \
-kibuan/xmltv 
+kibuan/xmltv
 ```
 
 When the container exits the .xml file should be ready in the output folder.
@@ -89,7 +144,7 @@ sudo docker container run --rm -i \
 -v '/volume1/docker/xmltv/container:/root/.xmltv' \
 -v '/volume1/docker/xmltv/container:/opt/xml' \
 -e 'XMLTV_DAYS=14' \
-kibuan/xmltv 
+kibuan/xmltv
 ```
 
 # Setup xmltv guide on Plex

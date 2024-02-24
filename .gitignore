@@ -1,2 +1,3 @@
-/container/*
-!/container/.gitkeep
+/data/*
+!/data/config/.gitkeep
+!/data/output/.gitkeep

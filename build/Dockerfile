@@ -5,7 +5,9 @@
 
 FROM centos:8
 
-RUN dnf -y --nogpgcheck install epel-release dnf-plugins-core && \
+RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
+    sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* && \
+    dnf -y --nogpgcheck install epel-release dnf-plugins-core && \
     dnf config-manager --set-enabled powertools epel
 
 RUN dnf -y install \
@@ -65,10 +67,8 @@ RUN dnf -y install --nogpgcheck https://mirrors.rpmfusion.org/free/el/rpmfusion-
 
 WORKDIR /usr/src/app
 
-ENTRYPOINT exec /usr/src/app/grab.sh
 
 COPY grab.sh .
 RUN chmod +x /usr/src/app/grab.sh
 
-COPY tv_grab_dk_meetv /bin/tv_grab_dk_meetv
-RUN chmod +x /bin/tv_grab_dk_meetv
+ENTRYPOINT /usr/src/app/grab.sh $0 $1
